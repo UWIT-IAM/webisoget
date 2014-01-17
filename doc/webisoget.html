@@ -1,0 +1,522 @@
+<!-- ######################################################################
+ * Copyright (c) 2004-2013 The University of Washington
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * ========================================================================
+ -->
+
+<!-- Webisoget homepage:  http://staff.washington.edu/fox/webisoget/ -->
+
+<html>
+<head>
+<base href="http://staff.washington.edu/fox/webisoget/">
+<title> webisoget
+
+</title>
+<link rel=stylesheet type=text/css href=http://staff.washington.edu/fox/lib/fox.css>
+</head>
+<body>
+
+
+<p>
+<h3>Retrieve ISO protected web pages</h3>
+<p>
+
+<div class=wide-right>
+<div class="proc-summary">
+<table cellpadding=3 border=0>
+<tr><th align=left valign=top>Summary:</th><td align=left>
+
+Webisoget provides a means to automatically and programmatically
+retrieve pages from web sites that require
+ISO login - <a href="http://www.pubcookie.org/">pubcookie</a> 
+ or <a href="http://shibboleth.internet2.edu/">shibboleth</a>, for example, 
+ or <a href="http://google.com/">google</a>, for example, 
+
+</td></tr>
+<tr><th align=left valign=top>Download:</th><td align=left>
+    <a href=webisoget-2.7.tar.gz>webisoget-2.7.tar.gz</a>
+</td></tr>
+</table>
+</div>
+
+<p>
+
+
+<div class="section-bar">
+ <a name=operation>Operation</a>
+</div>
+
+<p>
+<h3><a name=op_retrieve>Retrieving pages</a></h3>
+<p>
+The presence of a <a href=#url>url</a> command, either on the command line
+or interactively, causes webisoget to retrieve the 
+specified web page.  In certain conditions it will use content
+in that page to retrieve a second page:
+<div class=bordered>
+<ol>
+<li>If the page headers contain an automatic redirection, "<tt>Location</tt>"
+  or "<tt>Refresh</tt>", the redirection will be followed.
+<p>
+<li>If the page text contains a meta refresh, and its time delay is zero,
+the redirection will be followed.
+<p>
+<li>If one or more <a href=#anchor>anchor</a>'s have been specified,
+and the page contains the matching link, that link will be followed.
+<p>
+<li>If one or more <a href=#frame>frame</a>'s have been specified,
+and the page contains the matching frame, that frame will be loaded.
+<p>
+<li>If one or more <a href=#form>form</a>'s have been specified,
+and the page contains the matching form, that form will be filled
+in and submitted.
+</ol>
+</div>
+<p>
+
+The second page may lead in a similar manner to a third and fourth and etc.
+
+
+<p>
+<a name=formdesc>
+<h3><a name=op_form>Filling in forms</a></h3>
+</a>
+<p>
+
+Web forms consist of name-value pairs. 
+Webisoget's  <a href=#formfile>form file</a>
+contains descriptions, one line per form, of forms you want 
+to fill out and submit. 
+General syntax is <tt><i>name</i>=<i>value</i></tt>, with entries separated
+by semicolons.
+<div class=bordered>
+  <tt>name=<i>form name</i>;<i>field_name</i>=<i>field_value</i>;<i>field_name</i>=<i>field_value</i>;...;</tt>
+</div>
+<p>
+<ol>
+<li>You may specify the same field name more than once to submit multiple values,
+    as for example a form with checkboxes might do.
+<li>In value strings you may use:
+<ul>
+  <li>"<tt>\;</tt>" to specify a semicolon
+  <li>"<tt>\n</tt>" for a newline
+  <li>"<tt>\\</tt>" for a backslash.
+</ul>
+<li>Specify <tt>name=<i>form_name</i>;</tt> to match a a specific form by name.
+<li>Specify <tt>name=;</tt> to match a form with no name.
+<li>Omit the <tt>name=</tt> to match any form.
+<li>Specify a domain name, "<tt>domain=<i>some.domain.org</i>;</tt>",
+   to match forms only in that domain.
+<li>Specify a submit name, "<tt>submit_name=<i>name</i>;</tt>",
+   to match a form with a submit button with that name.
+<li>Specify a submit value, "<tt>submit_value=<i>value</i>;</tt>",
+   to match a form with a submit button with that value.
+<li>Textareas are treated like text inputs.
+</ol>
+<p>
+For example, the form specification
+<div class=bordered>
+  <tt>name=query; user=spud; pass=potato;</tt>
+</div>
+
+Would submit pubcookie's login form.
+
+<p>
+Many forms have name-value pairs with default values, hidden fields, for example.
+Webisoget will automatically fill in any default values.
+
+
+
+<p>
+<h3><a name=op_cookie>Working with cookies</a></h3>
+<p>
+
+Web ISO login systems use cookies to communicate between their
+various components and to maintain a session once logged-in.
+Webisoget allows you to <a href=#cache>cache</a> and reuse those session
+cookies - so you don't have to repeat the entire login 
+sequence each time you test the application.
+
+
+<p>
+<h3><a name=op_cert>Using certificates</a></h3>
+<p>
+
+As with any application using SSL, webisoget allows you to 
+specify a <a href=#cafile>CA file</a> of trusted certificate authorities;
+<a href=#cert>certificate</a> and <a href=#certkey>key</a> files containing 
+a certificate to use if a target site requires one. You can 
+also choose to ignore  <a href=#noverify>verification</a>  of the server's certificate.
+
+<p>
+<h3><a name=op_cluster>Accessing cluster members</a></h3>
+<p>
+
+A service is often supported by a cluster of several systems,
+each responding to the same domain name.  A weblogin 
+service at "<tt>weblogin.ivy.edu</tt>" might consist
+of the servers "<tt>wl01.login.ivy.edu</tt>", "<tt>wl02.login.ivy.edu</tt>",
+..., "<tt>wl05.login.ivy.edu</tt>".
+Webisoget allows you to <a href=#map>map</a> the generic cluster name
+to a specific system in that cluster.
+
+
+
+<p>
+<h3><a name=op_rest>Working with RESTful services</a></h3>
+<p>
+
+Webisoget supports the most common REST operations,
+<p>
+<table border=0>
+<tr><td width=20></td><td nowrap align=left valign=top>GET</td><td align=left nowrap>default</td></tr>
+<tr><td width=20></td><td nowrap align=left valign=top>PUT</td><td align=left nowrap>see <a href="#putfile"><tt>-putfile</tt></a></td></tr>
+<tr><td width=20></td><td nowrap align=left valign=top>DELETE</td><td align=left nowrap>see <a href="#delete"><tt>-delete</tt></a></td></tr>
+<tr><td width=20></td><td nowrap align=left valign=top>POST</td><td align=left nowrap>see <a href="#postfile"><tt>-postfile</tt></a></td></tr>
+</table>
+
+<p>
+but cannot help you with the XML.
+
+<p>
+
+<div class="section-bar">
+ <a name=commands>Commands</a>
+</div>
+
+<p>
+
+Webisoget processes commands on the command line in the order 
+they appear.  It does NOT read the entire set of arguments
+before proceeding.  If no URL is specified webisoget will
+process the arguments and wait for interactive commands.
+<p>
+Interactive commands are just like arguments except
+they don't use the leading dash.
+<p>
+
+<table border=0>
+
+<tr><th colspan=99 align=left valign=top>Controlling verbosity</th></tr>
+
+<tr><td></td><td nowrap align=left valign=top><a name=cookies><tt>-cookies</tt></a></td>
+    <td>Show any cookies received for the session.
+   </td>
+</tr>
+
+<tr><td></td><td nowrap align=left valign=top><a name=pagetimes><tt>-pagetimes</tt></a></td>
+    <td>Show elapsed time of operations.
+   </td>
+</tr>
+
+<tr><td></td><td nowrap align=left valign=top><a name=verbose><tt>-verbose</tt></a></td>
+    <td>Give commentary on progress.
+   </td>
+</tr>
+
+<tr><td></td><td nowrap align=left valign=top><a name=debug><tt>-debug</tt></a></td>
+    <td>More commentary than <b>verbose</b>.
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=debug2><tt>-debug2</tt></a></td>
+    <td>More commentary than <b>debug</b>.
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=debug3><tt>-debug3</tt></a></td>
+    <td>A really lot of commentary.
+   </td>
+</tr>
+
+<tr><td height=10></td></tr>
+<tr><th colspan=99 align=left valign=top>Specifying forms and links</th></tr>
+
+<tr><td></td><td nowrap align=left valign=top><a name=anchor><tt>-anchor</tt></a> <i>anchor_text</i></td>
+    <td>Follow the specified link: &lt;a href=..&gt;<i>anchor_text</i>&lt;/a&gt;
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=frame><tt>-frame</tt></a> <i>name</i></td>
+    <td>Follow the named frame
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=form><tt>-form</tt></a> <i>form_description</i></td>
+    <td>In-line <a href=#formdesc>form description</a>. 
+    Better to use a form file.
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=formfile><tt>-formfile</tt></a> <i>form_filename</i></td>
+    <td>A file of <a href=#formdesc>form descriptions</a>. 
+   </td>
+</tr>
+
+<tr><td height=10></td></tr>
+<tr><th colspan=99 align=left valign=top>Using certificates</th></tr>
+
+<tr><td></td><td nowrap align=left valign=top><a name=cafile><tt>-cafile</tt></a> <i>CA_filename</i></td>
+    <td>A file of Certificate Authority certificates.
+    These will be used to authenticate any certificates
+    sent by a server.
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=cert><tt>-cert</tt></a> <i>cert_filename</i></td>
+    <td>A file containing a certificate to use when a
+    site requires certificate authentication.  Must be PEM format.
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=certkey><tt>-certkey</tt></a> <i>key_for_cert</i></td>
+    <td>A file containing your certificate's key.
+    Must be PEM format.
+    </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=noverify><tt>-noverify</tt></a></td>
+    <td>Do NOT verify certificates from servers.
+   </td>
+</tr>
+
+<tr><td height=10></td></tr>
+<tr><th colspan=99 align=left valign=top>Retrieving pages</th></tr>
+
+<tr><td></td><td nowrap align=left valign=top><a name=cache><tt>-cache</tt></a> <i>cache_file</i></td>
+    <td>Load session cookies from this file.
+    Save session cookies to this file before exit.
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=continue><tt>-continue</tt></a></td>
+    <td>If processing was stopped due to a hop count this will continue page processing.
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=delete><tt>-delete</tt></a></td>
+    <td>The next request will be a DELETE.
+   </td>
+</tr>
+<tr><td width=20></td><td nowrap align=left valign=top><a name=header><tt>-header</tt></a> <i>header_text</i></td>
+    <td>Add a header to the request.  Do NOT include and CR or LF.
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=map><tt>-map</tt></a> <i>alias<tt>=</tt></a>real</i></td>
+    <td>Any request for <i>alias</i> (the cluster) will
+    be sent to <i>real</i> (the menber).
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=maxhop><tt>-maxhop</tt></a> <i>count</i></td>
+    <td>Maximum number of redirections to follow. Default is 20.  Zero means get only one page.
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=maxtext><tt>-maxtext</tt></a> <i>count</i></td>
+    <td>Maximum characters of text that will be printed to stdout. Default is 1M.  Zero means no limit.
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=out><tt>-out</tt></a> <i>output_file</i></td>
+    <td>The last page retrieved will be saved to this file.
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=timeout><tt>-timeout</tt></a> <i>seconds</i></td>
+    <td>Maximum time to wait for a page.
+   </td>
+</tr>
+<tr><td width=20></td><td nowrap align=left valign=top><a name=text><tt>-text</tt></a></td>
+    <td>Display the text of the page. If there are
+    redirections or forms, only the last page will
+    be displayed.
+   </td>
+</tr>
+<tr><td></td><td nowrap align=left valign=top><a name=url><tt>-url</tt></a> <i>url</i></td>
+    <td>Retrieve the URL, following forms and redirections
+    as requested.  If specified as an argument webisoget
+    will exit and not enter interactive mode.
+   </td>
+</tr>
+
+
+<tr><td height=10></td></tr>
+<tr><th colspan=99 align=left valign=top>Uploading content</th></tr>
+
+<!--
+<tr><td width=20></td><td nowrap align=left valign=top><a name=postdata><tt>-postdata</tt></a> <i>content</i></td>
+    <td>POST the specified content.
+   </td>
+</tr>
+-->
+<tr><td width=20></td><td nowrap align=left valign=top><a name=postfile><tt>-postfile</tt></a> <i>filename</i></td>
+    <td>POST the content of the specified file.
+   </td>
+</tr>
+
+<!--
+<tr><td width=20></td><td nowrap align=left valign=top><a name=putdata><tt>-putdata</tt></a> <i>content</i></td>
+    <td>PUT the specified content.
+   </td>
+</tr>
+-->
+<tr><td width=20></td><td nowrap align=left valign=top><a name=putfile><tt>-putfile</tt></a> <i>filename</i></td>
+    <td>PUT the content of the specified file.
+   </td>
+</tr>
+
+
+<tr><td height=10></td></tr>
+<tr><th colspan=99 align=left valign=top>Miscellaneous</th></tr>
+
+<tr><td></td><td nowrap align=left valign=top><a name=quit><tt>-quit</tt></a></td>
+    <td>Exit the program.
+   </td>
+</tr>
+
+<tr><td></td><td nowrap align=left valign=top><a name=version><tt>-version</tt></a></td>
+    <td>Show program's version information and exit.
+   </td>
+</tr>
+
+
+</table>
+
+<p>
+
+
+<div class="section-bar">
+ <a name=example>Examples</a>
+</div>
+
+<p>
+<h3>Pubcookie</h3>
+<p>
+Pubcookie uses several Location redirection and one form (<tt>query</tt>).
+<p>
+To retrieve a page protected by pubcookie,
+using the user user with id "<tt>spud</tt>" and 
+password "<tt>potato</tt>" use this formfile (<tt>spud.login</tt>)
+
+<div class=bordered>
+<asis><pre>
+  name=query; user=spud; pass=potato;
+</pre></asis>
+</div>
+and this command
+<div class=bordered>
+<asis><pre>
+  $ webisoget -verbose -out page.txt -formfile spud.login \
+      -url https://target.ivy.edu/pubcookie_protected_path/
+</pre></asis>
+</div>
+
+<p>
+<h3>Shibboleth</h3>
+<p>
+Shibboleth uses several Location redirections, possibly a form at
+a wayf, and, of course, whatever the IdP's login requirements are.
+<p>
+To retrieve a page protected by shibboleth (with pubcookie),
+using the user user with id "<tt>spud</tt>" and 
+password "<tt>potato</tt>" use this formfile (<tt>spud.login</tt>)
+
+<div class=bordered>
+<asis><pre>
+  domain=wayf.incommonfederation.org; origin=urn:mace:incommon:ivy.edu;
+  name=query; user=spud; pass=potato;
+  name=shibboleth;
+  name=; submit_value=Continue; domain=your_idp_domain_name
+</pre></asis>
+</div>
+(assuming ivy is registered with InCommon) and the same command
+<div class=bordered>
+<asis><pre>
+  $ webisoget -verbose -out page.txt -formfile spud.login \
+      -url https://target.ivy.edu/shibboleth_protected_path/
+</pre></asis>
+</div>
+
+
+<p>
+<h3>Google</h3>
+<p>
+Google (this is a google openid-connect login) uses a form and some Location redirections. 
+After you're logged in there may be more pages to negotiate.  Save yourself trouble and 
+prerelease any attributes you might need.  
+<p>
+To accomplish a google openid-connect login
+using the user user with email "<tt>spud@gmain.com</tt>" and 
+password "<tt>potato</tt>" use this formfile (<tt>spud.login</tt>)
+
+<div class=bordered>
+<asis><pre>
+  domain=accounts.google.com; Email=spud@gmail.com; Passwd=potato;
+</pre></asis>
+</div>
+
+<p>
+
+<div class="section-bar">
+ <a name=license>License</a>
+</div>
+Webisoget is licensed under the terms of the
+<a href=http://apache.org/licenses/LICENSE-2.0>Apache License 2</a>.
+You are free to copy, use, and modify it to your needs
+according to the terms of that license.
+
+
+
+
+</div>
+
+
+<!-- index -->
+<div class="floating-index">
+<h3>Topics</h3>
+<ul id="toc">
+<li><a href="#operation">Operation</a></li>
+<li>&nbsp;&nbsp;<a href=#op_retrieve>Retrieving pages</a></li>
+<li>&nbsp;&nbsp;<a href=#op_form>Filing in forms</a></li>
+<li>&nbsp;&nbsp;<a href=#op_cookie>Working with cookies</a></li>
+<li>&nbsp;&nbsp;<a href=#op_cert>Using certificates</a></li>
+<li>&nbsp;&nbsp;<a href=#op_cluster>Accessing cluster members</a></li>
+<li>&nbsp;&nbsp;<a href=#op_rest>Working with RESTful services</a></li>
+<hr>
+<li><a href="#commands">Commands</a></li>
+<li>&nbsp;&nbsp;<a href=#anchor>anchor</a></li>
+<li>&nbsp;&nbsp;<a href=#cache>cache</a></li>
+<li>&nbsp;&nbsp;<a href=#cafile>cafile</a></li>
+<li>&nbsp;&nbsp;<a href=#cert>cert</a></li>
+<li>&nbsp;&nbsp;<a href=#certkey>certkey</a></li>
+<li>&nbsp;&nbsp;<a href=#continue>continue</a></li>
+<li>&nbsp;&nbsp;<a href=#cookies>cookies</a></li>
+<li>&nbsp;&nbsp;<a href=#debug>debug</a></li>
+<li>&nbsp;&nbsp;<a href=#debug2>debug2</a></li>
+<li>&nbsp;&nbsp;<a href=#debug3>debug3</a></li>
+<li>&nbsp;&nbsp;<a href=#form>form</a></li>
+<li>&nbsp;&nbsp;<a href=#formfile>formfile</a></li>
+<li>&nbsp;&nbsp;<a href=#frame>frame</a></li>
+<li>&nbsp;&nbsp;<a href=#header>header</a></li>
+<li>&nbsp;&nbsp;<a href=#key>key</a></li>
+<li>&nbsp;&nbsp;<a href=#map>map</a></li>
+<li>&nbsp;&nbsp;<a href=#maxhop>maxhop</a></li>
+<li>&nbsp;&nbsp;<a href=#maxtext>maxtext</a></li>
+<li>&nbsp;&nbsp;<a href=#noverify>noverify</a></li>
+<li>&nbsp;&nbsp;<a href=#out>out</a></li>
+<li>&nbsp;&nbsp;<a href=#pagetimes>pagetimes</a></li>
+<li>&nbsp;&nbsp;<a href=#postfile>postfile</a></li>
+<li>&nbsp;&nbsp;<a href=#putfile>putfile</a></li>
+<li>&nbsp;&nbsp;<a href=#quit>quit</a></li>
+<li>&nbsp;&nbsp;<a href=#text>text</a></li>
+<li>&nbsp;&nbsp;<a href=#timeout>timeout</a></li>
+<li>&nbsp;&nbsp;<a href=#url>url</a></li>
+<li>&nbsp;&nbsp;<a href=#verbose>verbose</a></li>
+<li>&nbsp;&nbsp;<a href=#version>version</a></li>
+<hr>
+<li><a href="#example">Example</a></li>
+<hr>
+<li><a href="#license">License</a></li>
+</div>
+
+
+
+ 

@@ -1,0 +1,64 @@
+Vers 2.7
+
+??
+Force ssl connections to be SSLv3
+
+
+Vers 2.6
+
+urldecode any incoming pre-encoded form text
+(see encode_form_text)
+
+
+Vers 2.4
+
+remove local definition of strndup
+change curl/types.h to curl/curl/typecheck-gcc.h
+
+
+Vers 2.02
+
+1) Translate '&#....;' to ascii char
+
+Vers 2.01
+
+1) Fix show-page at end of sequence
+2) [2/27/2009] add webisoget.spec for rpmbuild
+
+Vers 2.00
+
+1) Refactoring and fixing of cookie handling
+2) Refactoring and fixing of form handling
+
+Vers 1.49
+
+1) Fix poor cookie handling
+2) Add post/put/delete
+
+Version 1.47
+
+1) Allow multiple, comma-separated cookies per header
+
+Version 1.46
+
+1) Fix something?
+
+Version 1.45
+
+1) Allow '\;' and '\n' in form text for semicolon and newline.
+
+2) Form response includes only one "submit" button.
+   If user specifies one it is used, else just the first encountered.
+
+3) Textareas in forms are processed better.
+
+4) Multiple values can be specified in form descriptions.
+   e.g. item=aaa; item=bbb; ...
+
+5) "-noverify" option works.
+
+6) More use of strcasecmp.
+
+7) Better parsing of input key=value strings.
+
+

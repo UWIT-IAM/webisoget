@@ -1,0 +1,168 @@
+.TH WebISOGet 1
+
+.SH NAME
+WebISOGet - Get a web page from a WEBISO protected page.
+
+.SH SYNTAX
+\fBwebisoget\fP [\fIoptions\fP] 
+
+.SH DESCRIPTION
+\fBwebisoget\fP
+Retrieves a web page via http or https, possibly following redirects 
+and responding to forms.  Among the forms \fBwebisoget\fP will respond to
+are those used by the \fBpubcookie\fP and \fBshibboleth\fP systems
+during login.  In this way \fBwebisoget\fP can be used to retrieve web pages
+protected by a webiso system such as \fBpubcookie\fP or \fBshibboleth\fP.
+(see the web page for more up-to-date info.)
+
+
+.SH OPTIONS
+Options are processed as they are encountered.  Note that this makes
+\fBwebisoget\fP's action very much dependent upon the order of options.
+Normally one would specify one or more urls last.
+.TP 12
+.B -anchor \fIanchor_text\fP
+Follow the link: \fC<a href=..>\fIanchor_text\fP\fC</a>\fP
+.TP 12
+.B -cache \fIfilename\fP
+Cookies are retrieved from and saved to \fIfilename\fP.
+\fBwebisoget\fP rewrites this file before exiting.
+.TP 12
+.B -cafile \fIfilename\fP
+Specify a file of CA root certificates to verify SSL certificates.
+.TP 12
+.B -cert \fIfilename\fP
+Specify a certificate to be used for client certificate authentication.
+.TP 12
+.B -certkey \fIfilename\fP
+Specify the key for the client certificate.
+.TP 12
+.B -continue
+Reprocess the last page
+.TP 12
+.B -cookies
+Before exit, \fBwebisoget\fP will
+report a list of cookies received during the session.
+.TP 12
+.B -debug
+More output than \fIverbose\fP.
+.TP 12
+.B -debug2
+More output than \fIdebug\fP.
+.TP 12
+.B -debug3
+More output than \fIdebug2\fP.
+.TP 12
+.B -form \fIdescription\fP
+Identifies a form to respond to.  (See FORM_DESCRIPTION)
+.TP 12
+.B -formfile \fIname\fP
+Form information is in the indicated file. (See FORM_DESCRIPTION)
+.TP 12
+.B -frame \fIname\fP
+Identifies a frame to follow. 
+.TP 12
+.B -map \fIalias=real\fP
+Identifies a real host (\fIreal\fP) to be accessed instead 
+of the alias name ((\fIalias\fP).  This may be used, for example,
+to connect to a particular member of a cluster.
+.TP 12
+.B -maxhop \fIcount\fP
+Maximum number of redirections to follow.
+.TP 12
+.B -maxtext \fIcount\fP
+Maximum chars of text to stdout. Default=1M. Zero=unlimited.
+.TP 12
+.B -noverify 
+Will not attempt to verify the certificate of the web server.
+.TP 12
+.B -out \fIfilename\fP
+Write the last page to \fIfilename\fP.
+.TP 12
+.B -pagetimes 
+Show elapsed time of operations.
+.TP 12
+.B -text
+Displays the text of the pages received. If \fBwebisoget\fP follows
+redirections, only the last page is displayed.
+.TP 12
+.B -timeout \fIseconds\fP
+Time limit for page retrievals
+.TP 12
+.B -url \fIurl\fP
+URL to retrieve.  \fBwebisoget\fP will retrieve this page and exit.
+.TP 12
+.B -verbose
+Gives commentary on its progress.
+.TP 12
+.B -version
+Show version and exit.
+
+.SH INTERACTIVE MODE
+If run without a URL specified, \fIwebisoget\fP will read
+commands (options, without the hyphen) from standard input until end of file. 
+
+
+.SH COOKIES
+\fIwebisoget\fP receives and sends cookies.  If you want it to
+save these between sessions, use the \fI-cache\fP option.
+Specifying \fI-cookies\fP causes \fIwebisoget\fP to print
+a report of all cookies received during the session.
+
+.SH FORM_DESCRIPTION
+\fIwebisoget\fP will fill out and submit forms.
+A form description contains the form name, possibly a domain name,
+and the name and value  pairs for some form inputs. The values are in a syntax
+similar to that used by web forms.  The fields
+are separated by semi-colons.  Specify \fCname=;\fP to match
+a form with no name.  Omit the name to match any form.  
+
+If a domain name (\fCdomain=\fIsome.domain.org;\fP) is specified only
+forms found on that domain will match.
+
+If a submit name (\fCsubmit_name=\fIname;\fP) is specified only the
+form with a submit button by that name will match.
+
+If a submit value (\fCsubmit_value=\fIvalue;\fP) is specified only the
+form with a submit button with that value will match.
+
+For example, this form will achieve a pubcookie login
+as user "spud" with password "potato".
+
+.I name=query; user=spud; pass=potato;
+
+A formfile is a file with one form description per line.
+
+.SH LIBRARY API
+The functions of \fIwebisoget\fP are available as a c API.
+There is no additional documentation for this, but the
+main program source shows quite clearly how to use the library.
+Specify at least \fC-lwebisoget -lcurl -lssl -lcrypto -lz -lcurl\fP
+to your linker.
+
+
+.SH COPYRIGHT
+
+.nf
+  ========================================================================
+  Copyright (c) 2004-2006 The University of Washington
+
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  ========================================================================
+
+.fi
+
+
+.SH AUTHOR
+Jim Fox, University of Washington, fox@washington.edu
+
