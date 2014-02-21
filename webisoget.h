@@ -31,7 +31,6 @@ extern int daylight;
 extern int verify_peer;
 
 #include <curl/curl.h>
-#include <curl/typecheck-gcc.h>
 #include <curl/easy.h>
 
 #ifndef FALSE

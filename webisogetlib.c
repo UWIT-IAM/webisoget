@@ -922,31 +922,30 @@ static Form isaform(WebPage page)
                 if (!e) break;  /* invalid */
                 *e = '\0';
          
+                wn = find_key(s, "name", &wp);
                
                 // check the submit value and name with or without a name
          
-                   w = find_key(s, "type", NULL);
-                   if (w) {
-                      if (!strcasecmp(w, "submit")) {
-                          subtype = 1;
-                          if (kf->submit_name && !strcasecmp(wn, kf->submit_name)) {
-                             PRINTF1(".. form by submit name: %s\n", wn);
+                w = find_key(s, "type", NULL);
+                if (w) {
+                   if (!strcasecmp(w, "submit")) {
+                       subtype = 1;
+                       if (wn && kf->submit_name && !strcasecmp(wn, kf->submit_name)) {
+                          PRINTF1(".. form by submit name: %s\n", wn);
+                          have_correct_submit = 1;
+                       }
+                       if (kf->submit_value) {
+                          w = find_key(s, "value", &wp);
+                          if (w && !strcasecmp(w, kf->submit_value)) {
+                             PRINTF1(".. form by submit value: %s\n", w);
                              have_correct_submit = 1;
                           }
-                          if (kf->submit_value) {
-                             w = find_key(s, "value", &wp);
-                             if (w && !strcasecmp(w, kf->submit_value)) {
-                                PRINTF1(".. form by submit value: %s\n", w);
-                                have_correct_submit = 1;
-                             }
-                          }
-                      } 
-                      if (!strcasecmp(w, "file")) userv = 1;
-                      free(w);
-                   }
-                   free(wn);
+                       }
+                   } 
+                   if (!strcasecmp(w, "file")) userv = 1;
+                   free(w);
+                }
          
-                wn = find_key(s, "name", &wp);
                 if (wn) {
                    n = strndup(page->text+(wp-page->lower_text), strlen(wn));
 
@@ -975,6 +974,7 @@ static Form isaform(WebPage page)
                       free(v);
                    }
                    free(n);
+                   free(wn);
                 }
                 *e = '>';
                 s = e + 1;

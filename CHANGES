@@ -1,5 +1,7 @@
-Vers 2.7
+Vers 2.7.1
+Fix horrible bug is form processing.
 
+Vers 2.7
 ??
 Force ssl connections to be SSLv3
 
