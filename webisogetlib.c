@@ -1,5 +1,5 @@
 /* ========================================================================
- * Copyright (c) 2004-2013 The University of Washington
+ * Copyright (c) 2004-2014 The University of Washington
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -755,11 +755,11 @@ static char *decode_text(char *t) {
    char *dec = (char*) malloc(3*strlen(t)+12);
    char *ret = dec;
    for (; *t; t++) {
-      if (!strncmp(t, "&lt;", 4)) *dec++='<', t=t+3; 
-      else if (!strncmp(t, "&gt;", 4)) *dec++='>', t=t+3; 
-      else if (!strncmp(t, "&amp;", 5)) *dec++='&', t=t+4; 
-      else if (!strncmp(t, "&quot;", 6)) *dec++='"', t=t+5; 
-      else if (!strncmp(t, "&apos;", 6)) *dec++='\'', t=t+5; 
+      if (!strncasecmp(t, "&lt;", 4)) *dec++='<', t=t+3; 
+      else if (!strncasecmp(t, "&gt;", 4)) *dec++='>', t=t+3; 
+      else if (!strncasecmp(t, "&amp;", 5)) *dec++='&', t=t+4; 
+      else if (!strncasecmp(t, "&quot;", 6)) *dec++='"', t=t+5; 
+      else if (!strncasecmp(t, "&apos;", 6)) *dec++='\'', t=t+5; 
       else *dec++ = *t;
    }
    *dec = '\0';
@@ -830,7 +830,8 @@ static Form isaform(WebPage page)
 	n = (char *) malloc(l+1);
 	strncpy(n, page->text+(ap-page->lower_text), l);
 	n[l] = '\0';
-	action = n;
+	action = decode_text(n);
+        free(n);
       } else action = strdup("");
 
       method = find_key(fs, "method", NULL);
@@ -881,8 +882,8 @@ static Form isaform(WebPage page)
          
             if ((!kf->submit_name)&&(!kf->submit_value)) have_correct_submit = 1;
 
-            PRINTF1(" > responding to form %s, i=%x \n",
-                  kf->name?kf->name:"-null-", kf->inputs);
+            PRINTF1(" > responding to form %s\n",
+                  kf->name?kf->name:"-null-");
          
             /* Start the response with all the user's supplied values */
          
@@ -1288,7 +1289,7 @@ static size_t header_reader(void *buf, size_t len, size_t num, void *wp)
   PageHeader ph;
   char *p, *e;
 
-  PRINTF2("..head %d(%d) bytes: [%s]\n", len, num, buf);
+  // PRINTF2("..head %d(%d) bytes: [%s]\n", len, num, buf);
 
   /* Assumption: we can modify the data */
   if (p=strchr(buf,':')) {
@@ -1313,7 +1314,7 @@ static size_t header_reader(void *buf, size_t len, size_t num, void *wp)
 
 static size_t put_function(void *ptr, size_t size, size_t nmemb, void *stream) 
 {
-   fprintf(stderr, ".. put wants %d*%d bytes\n", size, nmemb);
+   // fprintf(stderr, ".. put wants %d*%d bytes\n", size, nmemb);
    memcpy(ptr, "<body><li></li></body>", 22);
    return (22);
 }

@@ -1,0 +1,17 @@
+
+Install with:
+
+# ./configure
+# make
+# make install
+
+Or with:
+
+# make dist
+# rpmbuild -ta webisoget-2.7.2.tar.gz
+
+--------------------------------------------------------------
+
+rpm spec thanks to: Peter Schober <peter.schober@univie.ac.at>
+
+
