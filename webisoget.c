@@ -117,7 +117,7 @@ static char *get_file(char *file)
    rewind(f);
 
    str = (char*) malloc(l+1);
-   fread(str, l, 1, f);
+   size_t r = fread(str, l, 1, f);
    fclose(f);
 
    return(str);

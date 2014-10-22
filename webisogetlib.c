@@ -1379,7 +1379,7 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
    curl_easy_setopt(W->curl, CURLOPT_USERAGENT, W->user_agent);
    /* TEST */
    curl_easy_setopt(W->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-   curl_easy_setopt(W->curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_SSLv3);
+   curl_easy_setopt(W->curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_DEFAULT);
 
    /* add user's headers */
    

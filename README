@@ -1,0 +1,31 @@
+Webisoget is a web page retrieval program that will 
+follow redirections and frames, and will submit
+and follow forms.  It can be used to access
+pubcookie and shibboleth protected pages.
+
+See the user documentation in webisoget.man
+or in webisoget.html
+
+The library and includes are installed as well
+as the executable.  You can use them in your
+c programs.  Use webisoget.c as a guide to the API.
+
+--------------------------------------------------------------
+Author:  Jim Fox, University of Washington, fox@washington.edu
+--------------------------------------------------------------
+
+Install with:
+
+# ./configure
+# make
+# make install
+
+Or with:
+
+# rpmbuild -ta webisoget-2.5.tar.gz
+
+--------------------------------------------------------------
+
+rpm spec thanks to: Peter Schober <peter.schober@univie.ac.at> 
+
+

@@ -1,3 +1,6 @@
+Vers 2.7.3
+Use CURL_SSLVERSION_DEFAULT for ssl version.  Uses TLS where available.
+
 Vers 2.7.2
 url decode form action urls
 
