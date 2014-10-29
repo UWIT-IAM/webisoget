@@ -33,6 +33,9 @@ FILE *putfile = NULL;
 
 int interactive = 0;
 extern int delete_op;
+long lone = 1;
+long ltwo = 2;
+long lzero = 0;
 
 static char *user_agent = USER_AGENT_GECKO;
 
@@ -147,8 +150,8 @@ static int docmd(WebGet W, char *cmd, char *arg)
    char *s;
    char curl_errtxt[CURL_ERROR_SIZE];
 
-   curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYPEER, 0);
-   curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYHOST, 0);
+   curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYPEER, lone);
+   curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYHOST, ltwo);
    curl_easy_setopt(W->curl, CURLOPT_ERRORBUFFER, curl_errtxt);
 
    /* parameter setting */
@@ -276,13 +279,13 @@ static int docmd(WebGet W, char *cmd, char *arg)
    } else if (!strcmp(cmd,"cafile")) {
       if (!arg) usage();
       curl_easy_setopt(W->curl, CURLOPT_CAINFO, strdup(arg));
-      curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYPEER, 1);
-      curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYHOST, 0);
+      // curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYPEER, lone);
+      // curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYHOST, ltwo);
       verify_peer = 1;
 
    } else if (!strcmp(cmd,"noverify")) {
-      curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYPEER, 0);
-      curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYHOST, 0);
+      // curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYPEER, lzero);
+      // curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYHOST, lzero);
       verify_peer = 0;
 
    } else if (!strcmp(cmd,"pagetimes")) {
@@ -348,7 +351,7 @@ int  main(int argc, char *argv[])
          char *n;
          char *cmd, *arg;
          if (!*inbuf) break;
-         if (n=strchr(inbuf,'\n')) *n = '\0';
+         if ((n=strchr(inbuf,'\n'))!=NULL) *n = '\0';
 
          /* get command and arg */
          cmd = inbuf;

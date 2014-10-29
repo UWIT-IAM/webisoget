@@ -197,3 +197,4 @@ int load_known_form_from_file(WebGet W, char *file);
 WebPage get_one_page(WebGet W, char *urlstr, Form form);
 WebPage process_pages(WebPage page);
 WebGet new_WebISOGet();
+void add_header(WebGet W, char *text);

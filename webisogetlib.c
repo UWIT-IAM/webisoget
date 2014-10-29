@@ -34,8 +34,17 @@
 #include "openssl/x509v3.h"
 #include "openssl/err.h"
 
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
+
+
 int verify_peer = 0;
 int delete_op = 0;
+long lone = 1;
+long ltwo = 2;
+long lzero = 0;
 
 extern char *postdata;
 extern FILE *postfile;
@@ -112,6 +121,12 @@ void add_header(WebGet W, char *text)
    if (W->num_user_headers<MAX_USER_HEADERS) W->user_headers[W->num_user_headers++] = strdup(text);
 }
 
+/* Since 2.7.4 we use curl's verification.  Cirl now allows use to 
+   fake DNS lookup differently.
+ */
+
+#ifdef VERIFICATION_THE_OLD_WAY
+
 /* Peer verification.  We can't let curl do this
    because we allow hostname mappings.  
 
@@ -144,7 +159,6 @@ static int check_name(char *pat, char *name)
    Return 1 if OK. */
 
 char *static_peer_name;
-int static_debug;
 static int sslverify_callback(int ok, X509_STORE_CTX *ctx)
 {
    X509 *peercert;
@@ -156,12 +170,9 @@ static int sslverify_callback(int ok, X509_STORE_CTX *ctx)
    peercert=X509_STORE_CTX_get_current_cert(ctx);
    X509_NAME_get_text_by_NID (X509_get_subject_name(peercert), NID_commonName, cn, sizeof(cn));
 
-   if (static_debug>1) printf("verify: d=%d, ok=%d, vfy=%d, pn=%s, cn=%s\n", d, ok, verify_peer, static_peer_name, cn);
 
    if (!ok) {
       int err = X509_STORE_CTX_get_error(ctx);
-      if (static_debug) printf("cert verify: d=%d, dn=%s, err=%d %s\n",
-                  d, cn, err, X509_verify_cert_error_string(err));
       if (verify_peer) return (ok);
    }
    if (d) return (verify_peer?ok:1);
@@ -189,7 +200,6 @@ static int sslverify_callback(int ok, X509_STORE_CTX *ctx)
    }
 
    /* make up an error */
-   if (static_debug>1) printf("error, peer CN does not match peer name\n");
    SSLerr(SSL_F_SSL_VERIFY_CERT_CHAIN, SSL_R_PEER_ERROR_CERTIFICATE);
    return (0);
 }
@@ -202,19 +212,52 @@ static CURLcode curl_ctx_callback(CURL *curl, void *ctx, void *parm)
    return (0);
 }
 
+#endif /* VERIFICATION_THE_OLD_WAY */
+
 /* hostname mappings: for 'name' use 'realname' instead */
+
+// get ip for dns name
+char *get_dottedip(char *host) {
+   struct hostent *he;
+   int ret;
+   struct in_addr **addr_list;
+   
+   he = gethostbyname(host);
+   printf("ret=%d for %s\n", ret, host);
+   if (he==NULL) {
+      perror("hostlookup");
+      return (NULL);
+   }
+   addr_list = (struct in_addr **) he->h_addr_list;
+   int i;
+   char *ip = (char*)malloc(256);;
+for(i = 0; addr_list[i] != NULL; i++) 
+    {
+        //Return the first one;
+        strcpy(ip , inet_ntoa(*addr_list[i]) );
+        printf("found %s\n", ip);
+        return (ip);
+    }
+    printf("not found\n");
+   return (NULL);
+}
 
 void add_host_map(WebGet W, char *str)
 {
    HostMap m;
    char *n, *s;
-   if (s=strchr(str,'=')) {
+   if ((s=strchr(str,'='))!=NULL) {
       *s = '\0';
       m = (HostMap) malloc(sizeof(HostMap_));
       m->name = strdup(str);
-      m->realname = strdup(s+1);
+      char *realname = strdup(s+1);
       *s = '=';
-      if (s=strchr(m->realname,'\n')) *s = '\0';
+      if ((s=strchr(realname,'\n'))!=NULL) *s = '\0';
+      // for (s=realname; *s; s++) if (!(isdigit(*s) || *s=='.')) break;
+      // if (*s) {
+         m->realname = get_dottedip(realname); // the map realname is string of dotted address
+         free(realname);
+      // } else m->realname = realname;  // real was ip addr
       m->next = W->host_maps;
       W->host_maps = m;
    }
@@ -252,25 +295,24 @@ static URL parse_url(WebGet W, char *txt) {
    /* extract host name and path */
    
    url->domain = strdup(txt);
-   if (p=strchr(url->domain,'/')) *p = '\0';
-   if (q=strchr(url->domain,':')) {
+   if ((p=strchr(url->domain,'/'))!=NULL) *p = '\0';
+   if ((q=strchr(url->domain,':'))!=NULL) {
       *q++ = '\0';
       url->port = atoi(q);
    }
-   if (p=strchr(txt,'/')) url->path = strdup(p);
+   if ((p=strchr(txt,'/'))!=NULL) url->path = strdup(p);
    else url->path = strdup("/");
-   if (p=strchr(url->path,'\n')) *p = '\0';
-   if (p=strchr(url->path,'\r')) *p = '\0';
+   if ((p=strchr(url->path,'\n'))!=NULL) *p = '\0';
+   if ((p=strchr(url->path,'\r'))!=NULL) *p = '\0';
    return (url);
 }
 
 /* make a url string from a URL */
-static char *make_url(WebGet W, URL u, int usemap)
+static char *make_url(WebGet W, URL u)
 {
    char *url = (char*) malloc(strlen(u->domain)+strlen(u->path)+32);
    char pnum[16];
    char *domain = u->domain;
-   HostMap M;
    if (u->prot==PROT_BAD) return (strdup("no_url"));
    
    /* check for non-standard port */
@@ -278,19 +320,7 @@ static char *make_url(WebGet W, URL u, int usemap)
         ((!u->use_ssl) && (u->port!=80)) ) sprintf(pnum,":%d", u->port);
    else pnum[0] = '\0';
 
-   /* check for mapped host */
-   for (M=W->host_maps; M && usemap; M=M->next) {
-      if (strcasecmp(M->name, domain)) continue;
-      PRINTF1("using '%s' for '%s'\n", M->realname, M->name);
-      domain = M->realname;  
-      // add a host header
-      char hhdr[256];
-      snprintf(hhdr, 256, "Host: %s", M->name);
-      W->headers = curl_slist_append(W->headers, hhdr);
-      break;
-   }
-   sprintf(url, "%s://%s%s%s", u->use_ssl?"https":"http",
-       domain, pnum, u->path);
+   sprintf(url, "%s://%s%s%s", u->use_ssl?"https":"http", domain, pnum, u->path);
    return (url);
 }
 
@@ -404,7 +434,7 @@ static void parse_cookie(WebGet W, char *txt, int new, WebPage page)
    int ck;
    char *mcp;
 
-   if (n = strchr(txt, '\n')) *n = '\0';
+   if ((n = strchr(txt, '\n'))!=NULL) *n = '\0';
    
    for (;;) { /* loop on all possible cookies */
      mcp = NULL;
@@ -460,8 +490,8 @@ static void parse_cookie(WebGet W, char *txt, int new, WebPage page)
         if (!c->text) c->text = strdup("");
         if (!c->path) {
            c->path = strdup(page?page->url->path:"");
-           if (p=strchr(c->path,'?')) *p = '\0';
-           if (p=strrchr(c->path,'/')) *(p+1) = '\0';
+           if ((p=strchr(c->path,'?'))!=NULL) *p = '\0';
+           if ((p=strrchr(c->path,'/'))!=NULL) *(p+1) = '\0';
            PRINTF1(" > fix path to %s\n", c->path);
         }
         PRINTF2("         data: %s=%s, for %s/%s\n", c->name,
@@ -600,7 +630,7 @@ static char *find_key(char *str, char *name, char **pos)
    if (*s=='"') {
       s++;
       e = strchr(s,'"');
-   } else if ((*s=='\'')) {
+   } else if (*s=='\'') {
       s++;
       e = strchr(s,'\'');
    } else {
@@ -633,12 +663,12 @@ int load_known_form(WebGet W, char *str)
 
    PRINTF3("..kf define\n");
 
-   if (s=strchr(str,'\n')) *s = '\0';
+   if ((s=strchr(str,'\n'))!=NULL) *s = '\0';
 
    for (s=str;*s;) {
       int ctl = 1;
       while (*s && *s==' ') s++;
-      if (v=strchr(s,'=')) {
+      if ((v=strchr(s,'='))!=NULL) {
          for (z=v; *z; z++) if ((*z==';')&&(*(z-1)!='\\')) break;
          ok++;
          *v++ = '\0';
@@ -676,7 +706,7 @@ int load_known_form(WebGet W, char *str)
      W->known_forms = f;
      PRINTF3("..kf done: %s\n", f->name?f->name:"--");
    } else free (f);
-  
+   return(1); 
 }
 
 /* Load a known form from a file */
@@ -739,8 +769,6 @@ static char *encode_form_text(char *t)
            if (*(t+1)=='\\') *e++ = '%', *e++ = '5', *e++ = 'C', t++;
            if (*(t+1)=='n') *e++ = '%', *e++ = '0', *e++ = 'A', t++;
        } else {
-           if (*t!='\n' && static_debug>0) fprintf(stderr,
-                           " Cannot encode char %x (%c)\n", *t, *t);
            *e++ = *t;
        }
    }
@@ -817,7 +845,7 @@ static Form isaform(WebPage page)
    /* Find a form that we should respond to */
 
    fe = NULL;
-   for (fs=page->lower_text; fs=strstr(fs,"<form"); fs=fe+1) {
+   for (fs=page->lower_text; (fs=strstr(fs,"<form")); fs=fe+1) {
 
       fe = strchr(fs,'>');
       if (!fe) return (NULL);
@@ -854,7 +882,7 @@ static Form isaform(WebPage page)
 	    } else {
 	      sprintf(s,"%s://%s:%d%s", proto, url->domain, url->port, url->path);
               /* strip parameters if method is GET */
-              if (!strcasecmp(method,"get")) if (ap=strrchr(s,'?')) *ap = '\0';
+              if (!strcasecmp(method,"get")) if ((ap=strrchr(s,'?'))!=NULL) *ap = '\0';
 	    }
             action = s;
             PRINTF1(" > form action fixed to %s\n", action);
@@ -914,7 +942,7 @@ static Form isaform(WebPage page)
             sub_v = NULL; 
             need_sub = 1;
          
-            while (s = strstr(s, "<input")) {
+            while ((s = strstr(s, "<input"))!=NULL) {
                 char *wp;
                 int userv = 0;
                 int subtype = 0;
@@ -999,7 +1027,7 @@ static Form isaform(WebPage page)
             s = fs;
             e = NULL;
          
-            while (s = strstr(s, "<textarea")) {
+            while ((s = strstr(s, "<textarea"))!=NULL) {
                 char *wp;
                 int userv = 0;
                 char *dv;
@@ -1162,7 +1190,7 @@ static char *redirect_url(WebPage page)
      if (!fe) break;
      *fe = '\0';  /* to limit searches */
    
-     if (n=find_key(fs, "name", &rp)) {
+     if ((n=find_key(fs, "name", &rp))!=NULL) {
        for (i=0;i<W->nframes;i++) if (!strcasecmp(W->frames[i],n)) break;
        if (i!=W->nframes) {
           char *v = find_key(fs, "src", &rp);
@@ -1227,7 +1255,7 @@ char *dereference_page(WebPage page)
    char *p;
    int b = 0;
 
-   while (p=strstr(base, "&#")) {
+   while ((p=strstr(base, "&#"))!=NULL) {
        char *e;
        char c;
 
@@ -1292,10 +1320,10 @@ static size_t header_reader(void *buf, size_t len, size_t num, void *wp)
   // PRINTF2("..head %d(%d) bytes: [%s]\n", len, num, buf);
 
   /* Assumption: we can modify the data */
-  if (p=strchr(buf,':')) {
+  if ((p=strchr(buf,':'))!=NULL) {
      *p++ = '\0';
-     if (e=strchr(p,'\n')) *e = '\0';
-     if (e=strchr(p,'\r')) *e = '\0';
+     if ((e=strchr(p,'\n'))!=NULL) *e = '\0';
+     if ((e=strchr(p,'\r'))!=NULL) *e = '\0';
      ph = (PageHeader) malloc(sizeof(PageHeader_));
      /* This reverses the order of headers */
      ph->next = page->headers;
@@ -1322,7 +1350,7 @@ static size_t put_function(void *ptr, size_t size, size_t nmemb, void *stream)
 WebPage get_one_page(WebGet W, char *urlstr, Form form) 
 {
    URL url;
-   struct curl_slist *headers = NULL; 
+   struct curl_slist *fakehost = NULL;
 
    int i;
    int c;
@@ -1340,7 +1368,6 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
    struct timeval pst;
    int ret;
 
-   static_debug = W->debug;
    gettimeofday(&pst, NULL);
    memset (page, '\0', sizeof(WebPage_));
    page->content = newStr();
@@ -1358,7 +1385,7 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
 
    if (W->headers) curl_slist_free_all(W->headers);
    W->headers = NULL;
-   fixurl = make_url(W, page->url, 1);
+   fixurl = make_url(W, page->url);
 
    if (form) {
     if (!strcasecmp(form->method,"get")) {
@@ -1381,6 +1408,17 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
    curl_easy_setopt(W->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
    curl_easy_setopt(W->curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_DEFAULT);
 
+   /* check for mapped host */
+   HostMap M;
+   for (M=W->host_maps; M; M=M->next) {
+      if (strcasecmp(M->name, page->url->domain)) continue;
+      PRINTF1("using '%s' for '%s'\n", M->realname, M->name);
+      char fakeip[256];
+      snprintf(fakeip, 256, "%s:%d:%s",  M->name, page->url->port, M->realname);
+      fakehost = curl_slist_append(NULL, fakeip);
+      curl_easy_setopt(W->curl, CURLOPT_RESOLVE, fakehost);
+   }
+
    /* add user's headers */
    
    for (i=0; i<W->num_user_headers; i++) {
@@ -1393,29 +1431,29 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
       /* GET form response appends the data to the url */
       char *geturl = (char*) malloc(strlen(fixurl)+strlen(form->data)+2);
       sprintf(geturl,"%s?%s", fixurl, form->data);
-      curl_easy_setopt(W->curl, CURLOPT_HTTPGET, 1);
+      curl_easy_setopt(W->curl, CURLOPT_HTTPGET, lone);
       curl_easy_setopt(W->curl, CURLOPT_URL, geturl);
 
    } else if (postform) {
 
       /* POST form response sends the data separately */
       curl_easy_setopt(W->curl, CURLOPT_POSTFIELDS, form->data);
-      curl_easy_setopt(W->curl, CURLOPT_POST, 1);
+      curl_easy_setopt(W->curl, CURLOPT_POST, lone);
       curl_easy_setopt(W->curl, CURLOPT_URL, fixurl);
 
    } else {
 
     if (postdata) {
       curl_easy_setopt(W->curl, CURLOPT_POSTFIELDS, postdata);
-      curl_easy_setopt(W->curl, CURLOPT_POST, 1);
+      curl_easy_setopt(W->curl, CURLOPT_POST, lone);
       curl_easy_setopt(W->curl, CURLOPT_URL, fixurl);
 
 /**
     } else if (putdata) {
-      curl_easy_setopt(W->curl, CURLOPT_VERBOSE, 1);
+      curl_easy_setopt(W->curl, CURLOPT_VERBOSE, lone);
       // curl_easy_setopt(W->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
       curl_easy_setopt(W->curl, CURLOPT_READFUNCTION, put_function);
-      curl_easy_setopt(W->curl, CURLOPT_UPLOAD, 1);
+      curl_easy_setopt(W->curl, CURLOPT_UPLOAD, lone);
  **/
 
     } else if (putfile) {
@@ -1423,11 +1461,11 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
       fseek(putfile, 0, SEEK_END);
       nb = ftell(putfile);
       fseek(putfile, 0, SEEK_SET);
-      curl_easy_setopt(W->curl, CURLOPT_VERBOSE, 1);
+      curl_easy_setopt(W->curl, CURLOPT_VERBOSE, lone);
       // curl_easy_setopt(W->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
       curl_easy_setopt(W->curl, CURLOPT_READDATA, putfile);
       curl_easy_setopt(W->curl, CURLOPT_INFILESIZE, nb);
-      curl_easy_setopt(W->curl, CURLOPT_UPLOAD, 1);
+      curl_easy_setopt(W->curl, CURLOPT_UPLOAD, lone);
       curl_easy_setopt(W->curl, CURLOPT_URL, fixurl);
 
     } else if (delete_op) {
@@ -1437,7 +1475,7 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
     } else {
 
       /* Else is simple GET */
-      curl_easy_setopt(W->curl, CURLOPT_HTTPGET, 1);
+      curl_easy_setopt(W->curl, CURLOPT_HTTPGET, lone);
       curl_easy_setopt(W->curl, CURLOPT_URL, fixurl);
     }
    }
@@ -1447,6 +1485,8 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
    /* Get or post the page */
 
    ret = curl_easy_perform(W->curl);
+
+   if (fakehost) curl_slist_free_all(fakehost);
 
    if (ret) {
       free_page(page);
@@ -1467,6 +1507,7 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
    freeStr(page->content);
    page->content = NULL;
    PRINTF3("  DATA\n %s  \nEDATA\n", page->text);
+
 
    /* curl_easy_cleanup(W->curl); */
    /* curl_easy_reset(W->curl); */
@@ -1506,14 +1547,14 @@ WebPage process_pages(WebPage page)
    while (page && hop++<W->maxhop && !page->hitbin) {
 
       /* redirections */
-      if (rstr=redirect_url(page)) {
+      if ((rstr=redirect_url(page))!=NULL) {
          hop++;
          free_page(page);
          page = get_one_page(W, rstr, NULL);
          continue;
       }
       /* forms */
-      if (f=isaform(page)) {
+      if ((f=isaform(page))!=NULL) {
          hop++;
          free_page(page);
          page = get_one_page(W, f->action, f);
@@ -1546,11 +1587,18 @@ WebGet new_WebISOGet()
    memset(W, '\0', sizeof(WebGet_));
 
    W->curl = curl_easy_init();
-   curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYPEER, FALSE);
-   /* curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYHOST, TRUE); */
+   if (verify_peer) {
+      curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYPEER, lone);
+      curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYHOST, ltwo);
+   } else {
+      curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYPEER, lzero);
+      curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYHOST, lzero);
+   }
    curl_easy_setopt(W->curl, CURLOPT_WRITEFUNCTION, page_reader);
    curl_easy_setopt(W->curl, CURLOPT_HEADERFUNCTION, header_reader);
+#ifdef VERIFICATION_THE_OLD_WAY
    curl_easy_setopt(W->curl, CURLOPT_SSL_CTX_FUNCTION, curl_ctx_callback);
+#endif
 
 
    W->maxhop = 20;
