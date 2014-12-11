@@ -299,6 +299,9 @@ static int docmd(WebGet W, char *cmd, char *arg)
       fprintf(stdout, "%s version %s\n", PACKAGE_NAME, PACKAGE_VERSION);
       exit (0);
 
+   } else if (!strcmp(cmd,"newcurl")) {
+     new_curl(W);
+
    } else if (!strcmp(cmd,"quit")) {
       save_cookies(W);
       exit (0);

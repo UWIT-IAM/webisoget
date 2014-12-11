@@ -231,14 +231,13 @@ char *get_dottedip(char *host) {
    addr_list = (struct in_addr **) he->h_addr_list;
    int i;
    char *ip = (char*)malloc(256);;
-for(i = 0; addr_list[i] != NULL; i++) 
-    {
-        //Return the first one;
-        strcpy(ip , inet_ntoa(*addr_list[i]) );
-        printf("found %s\n", ip);
-        return (ip);
-    }
-    printf("not found\n");
+   for(i = 0; addr_list[i] != NULL; i++) {
+      //Return the first one;
+      strcpy(ip , inet_ntoa(*addr_list[i]) );
+      printf("found %s\n", ip);
+      return (ip);
+   }
+   printf("not found\n");
    return (NULL);
 }
 
@@ -248,18 +247,22 @@ void add_host_map(WebGet W, char *str)
    char *n, *s;
    if ((s=strchr(str,'='))!=NULL) {
       *s = '\0';
-      m = (HostMap) malloc(sizeof(HostMap_));
-      m->name = strdup(str);
+      for (m=W->host_maps; m; m=m->next) {
+         if (!strcasecmp(m->name, str)) break;
+      }
+      if (m==NULL) {
+         m = (HostMap) malloc(sizeof(HostMap_));
+         m->name = strdup(str);
+         m->next = W->host_maps;;
+         W->host_maps = m;
+      } else {
+         if (m->realname) free(m->realname);
+      }
       char *realname = strdup(s+1);
       *s = '=';
       if ((s=strchr(realname,'\n'))!=NULL) *s = '\0';
-      // for (s=realname; *s; s++) if (!(isdigit(*s) || *s=='.')) break;
-      // if (*s) {
-         m->realname = get_dottedip(realname); // the map realname is string of dotted address
-         free(realname);
-      // } else m->realname = realname;  // real was ip addr
-      m->next = W->host_maps;
-      W->host_maps = m;
+      m->realname = get_dottedip(realname); // the map realname is string of dotted address
+      free(realname);
    }
 }
 
@@ -870,17 +873,20 @@ static Form isaform(WebPage page)
       if (action && method) {
          /* add protocol if missing */
          if (strncmp(action,"http",4)) {
+            char portspec[24] = "";
+            if (url->prot==PROT_HTTP && url->port!=80) snprintf(portspec, 24, ":%d", url->port);
+            if (url->prot==PROT_HTTPS && url->port!=443) snprintf(portspec, 24, ":%d", url->port);
             s = (char*)malloc(strlen(action)+strlen(url->domain)+21+strlen(url->path));
             proto=(url->prot==PROT_HTTP? "http":"https");
             if (*action) {
               if (*action=='/') {
-	         sprintf(s,"%s://%s:%d%s", proto, url->domain, url->port,action);
+	         sprintf(s,"%s://%s%s%s", proto, url->domain, portspec, action);
               } else {
-	         sprintf(s,"%s://%s:%d%s", proto, url->domain, url->port, url->path);
+	         sprintf(s,"%s://%s%s%s", proto, url->domain, portspec, url->path);
                  strcpy(strrchr(s,'/')+1, action);
               }
 	    } else {
-	      sprintf(s,"%s://%s:%d%s", proto, url->domain, url->port, url->path);
+	      sprintf(s,"%s://%s%s%s", proto, url->domain, portspec, url->path);
               /* strip parameters if method is GET */
               if (!strcasecmp(method,"get")) if ((ap=strrchr(s,'?'))!=NULL) *ap = '\0';
 	    }
@@ -1413,7 +1419,14 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
    for (M=W->host_maps; M; M=M->next) {
       if (strcasecmp(M->name, page->url->domain)) continue;
       PRINTF1("using '%s' for '%s'\n", M->realname, M->name);
+      curl_easy_setopt(W->curl, CURLOPT_FRESH_CONNECT, lone);
+
       char fakeip[256];
+      snprintf(fakeip, 256, "-%s:%d",  M->name, page->url->port);
+      fakehost = curl_slist_append(NULL, fakeip);
+      curl_easy_setopt(W->curl, CURLOPT_RESOLVE, fakehost);
+
+      curl_slist_free_all(fakehost);
       snprintf(fakeip, 256, "%s:%d:%s",  M->name, page->url->port, M->realname);
       fakehost = curl_slist_append(NULL, fakeip);
       curl_easy_setopt(W->curl, CURLOPT_RESOLVE, fakehost);
@@ -1580,12 +1593,8 @@ WebPage process_pages(WebPage page)
 
 /* Initialize, etc. */
 
-WebGet new_WebISOGet()
-{
-   WebGet W = (WebGet) malloc(sizeof(WebGet_));
-
-   memset(W, '\0', sizeof(WebGet_));
-
+void new_curl(WebGet W) {
+   if (W->curl!=NULL) curl_easy_cleanup(W->curl);
    W->curl = curl_easy_init();
    if (verify_peer) {
       curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYPEER, lone);
@@ -1599,7 +1608,18 @@ WebGet new_WebISOGet()
 #ifdef VERIFICATION_THE_OLD_WAY
    curl_easy_setopt(W->curl, CURLOPT_SSL_CTX_FUNCTION, curl_ctx_callback);
 #endif
+   curl_easy_setopt(W->curl, CURLOPT_DNS_CACHE_TIMEOUT, lzero);
 
+}
+
+
+WebGet new_WebISOGet()
+{
+   WebGet W = (WebGet) malloc(sizeof(WebGet_));
+
+   memset(W, '\0', sizeof(WebGet_));
+
+   new_curl(W);
 
    W->maxhop = 20;
    W->maxxbuf = MAXXBUF;

@@ -198,3 +198,4 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form);
 WebPage process_pages(WebPage page);
 WebGet new_WebISOGet();
 void add_header(WebGet W, char *text);
+void new_curl(WebGet W);
