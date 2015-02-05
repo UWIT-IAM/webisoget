@@ -15,6 +15,7 @@
  * ========================================================================
  */
 
+#define VERIFICATION_THE_OLD_WAY
 
 /* Library for the webisoget package */
 

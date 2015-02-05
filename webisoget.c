@@ -150,8 +150,6 @@ static int docmd(WebGet W, char *cmd, char *arg)
    char *s;
    char curl_errtxt[CURL_ERROR_SIZE];
 
-   curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYPEER, lone);
-   curl_easy_setopt(W->curl, CURLOPT_SSL_VERIFYHOST, ltwo);
    curl_easy_setopt(W->curl, CURLOPT_ERRORBUFFER, curl_errtxt);
 
    /* parameter setting */
