@@ -224,9 +224,8 @@ char *get_dottedip(char *host) {
    struct in_addr **addr_list;
    
    he = gethostbyname(host);
-   printf("ret=%d for %s\n", ret, host);
    if (he==NULL) {
-      perror("hostlookup");
+      perror(host);
       return (NULL);
    }
    addr_list = (struct in_addr **) he->h_addr_list;
@@ -235,10 +234,8 @@ char *get_dottedip(char *host) {
    for(i = 0; addr_list[i] != NULL; i++) {
       //Return the first one;
       strcpy(ip , inet_ntoa(*addr_list[i]) );
-      printf("found %s\n", ip);
       return (ip);
    }
-   printf("not found\n");
    return (NULL);
 }
 
@@ -884,7 +881,8 @@ static Form isaform(WebPage page)
 	         sprintf(s,"%s://%s%s%s", proto, url->domain, portspec, action);
               } else {
 	         sprintf(s,"%s://%s%s%s", proto, url->domain, portspec, url->path);
-                 strcpy(strrchr(s,'/')+1, action);
+                 if (*action=='?') strcat(s, action);  
+                 else strcpy(strrchr(s,'/')+1, action);
               }
 	    } else {
 	      sprintf(s,"%s://%s%s%s", proto, url->domain, portspec, url->path);
@@ -1412,7 +1410,8 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
    if (ckstr->base && *ckstr->base) curl_easy_setopt(W->curl, CURLOPT_COOKIE, ckstr->base);
    curl_easy_setopt(W->curl, CURLOPT_USERAGENT, W->user_agent);
    /* TEST */
-   curl_easy_setopt(W->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+   // curl_easy_setopt(W->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
+   // curl_easy_setopt(W->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
    curl_easy_setopt(W->curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_DEFAULT);
 
    /* check for mapped host */
