@@ -969,11 +969,12 @@ static Form isaform(WebPage page)
                           have_correct_submit = 1;
                        }
                        if (kf->submit_value) {
-                          w = find_key(s, "value", &wp);
-                          if (w && !strcasecmp(w, kf->submit_value)) {
-                             PRINTF1(".. form by submit value: %s\n", w);
+                          char *ww = find_key(s, "value", &wp);
+                          if (ww && !strcasecmp(ww, kf->submit_value)) {
+                             PRINTF1(".. form by submit value: %s\n", ww);
                              have_correct_submit = 1;
                           }
+                          if (ww) free(ww);
                        }
                    } 
                    if (!strcasecmp(w, "file")) userv = 1;
