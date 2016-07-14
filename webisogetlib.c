@@ -604,6 +604,28 @@ void print_cookies(WebGet W)
 
 
 
+/* Find the character ch outside of a quoted string.
+   Return a pointer to the character if found.
+   Return NULL if character not found.  */
+
+static char *find_unquoted(char *str, char ch)
+{
+   char *s = str;
+   while(*s) {
+      if (*s == ch)
+         return s;
+      if (*s == '"') {
+         s++;
+         s = strchr(s,'"');
+         if (s == NULL)
+            return s;
+      }
+      s++;
+   }
+   return NULL;
+}
+
+
 /* Find the value for key 'name' in the string.
    Return empty string if keyword only.
    Return NULL if keyword not found. 
@@ -952,7 +974,7 @@ static Form isaform(WebPage page)
                 int userv = 0;
                 int subtype = 0;
          
-                e = strchr(s, '>');
+                e = find_unquoted(s, '>');
                 if (!e) break;  /* invalid */
                 *e = '\0';
          
