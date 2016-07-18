@@ -37,6 +37,7 @@
 
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <arpa/inet.h>
 
@@ -543,13 +544,17 @@ int restore_cookies(WebGet W)
 
 int save_cookies(WebGet W)
 {
+   int fd;
    FILE *f;
    Cookie c;
    char exp[256];
    time_t now = time(NULL);
 
    if (!W->cache_name) return(0);
-   f = fopen(W->cache_name,"w");
+   unlink(W->cache_name);
+   fd = open(W->cache_name, O_WRONLY | O_CREAT | O_EXCL, 0600);
+   if (fd < 0) return (0);
+   f = fdopen(fd,"w");
    if (!f) return (0);
    for (c=W->cookies;c;c=c->next) {
       exp[0] = '\0';
