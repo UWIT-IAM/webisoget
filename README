@@ -20,9 +20,15 @@ Install with:
 # make
 # make install
 
+To upgrade, best to clean first
+# make clean
+# make
+# make install
+
+
 Or with:
 
-# rpmbuild -ta webisoget-2.5.tar.gz
+# rpmbuild -ta webisoget-2.8.4.tar.gz
 
 --------------------------------------------------------------
 

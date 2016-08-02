@@ -843,6 +843,19 @@ static void append_form_text(Str text, char *n, char *v)
   free(enc);
 }
 
+/* find the next input:  '<input', '<button', ... */
+static char *next_input(char *s)
+{
+   char *i = strstr(s, "<input");
+   char *b = strstr(s, "<button");
+   if (i && b) {
+      if (i<b) return i;
+      return b;
+   }
+   if (i) return i;
+   return b;
+}
+
 /* See if this page has a form we should fill out.
    If so, return that form */
 
@@ -974,7 +987,7 @@ static Form isaform(WebPage page)
             sub_v = NULL; 
             need_sub = 1;
          
-            while ((s = strstr(s, "<input"))!=NULL) {
+            while ((s = next_input(s))!=NULL) {
                 char *wp;
                 int userv = 0;
                 int subtype = 0;

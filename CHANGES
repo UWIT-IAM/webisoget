@@ -1,3 +1,6 @@
+Vers 2.8.4 
+Allow <button as input
+
 Vers 2.8.0
 Use new libcurl option SSL_RESOLVE to choose particular member of a cluster (-map).
 Requires curl 7.30(?) or better. 

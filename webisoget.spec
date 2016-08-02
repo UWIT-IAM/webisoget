@@ -1,6 +1,6 @@
 Summary:	Retrieve ISO protected web pages
 Name:		webisoget
-Version:	2.5
+Version:	2.8.4
 Release:	1
 License:	Apache License v2.0
 Group:		Applications/Internet
@@ -45,5 +45,7 @@ install doc/webisoget.html $RPM_BUILD_ROOT%{_docdir}/%{name}/webisoget.html
 %define date	%(echo `LC_ALL="C" date +"%a %b %d %Y"`)
 %changelog
 * %{date} Peter Schober <peter.schober@univie.ac.at> 2.01-1
+- Rough first take at packaging, tested on RHEL5 and rebuilt on SLES9
+* %{date} Jim Fox <fox@washington.edu> 2.01-2
 - Rough first take at packaging, tested on RHEL5 and rebuilt on SLES9
 
