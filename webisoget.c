@@ -211,8 +211,13 @@ static int docmd(WebGet W, char *cmd, char *arg)
       add_anchor(W, arg);
 
    } else if (!strcmp(cmd,"map")) {
+#ifdef CURLOPT_RESOLVE
       if (!arg) usage();
       add_host_map(W, arg);
+#else
+      fprintf(stderr, "map command requires CURLOPT_RESOLVE from libcurl 7.30+\n");
+      return (0);
+#endif
 
    } else if (!strcmp(cmd,"postdata")) {
       if (!arg) usage();
