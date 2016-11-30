@@ -240,6 +240,7 @@ char *get_dottedip(char *host) {
    return (NULL);
 }
 
+#ifdef CURLOPT_RESOLVE
 void add_host_map(WebGet W, char *str)
 {
    HostMap m;
@@ -264,6 +265,7 @@ void add_host_map(WebGet W, char *str)
       free(realname);
    }
 }
+#endif
 
 
 /* parse URL */
@@ -1455,6 +1457,7 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
    // curl_easy_setopt(W->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
    curl_easy_setopt(W->curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_DEFAULT);
 
+#ifdef CURLOPT_RESOLVE
    /* check for mapped host */
    HostMap M;
    for (M=W->host_maps; M; M=M->next) {
@@ -1472,6 +1475,7 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
       fakehost = curl_slist_append(NULL, fakeip);
       curl_easy_setopt(W->curl, CURLOPT_RESOLVE, fakehost);
    }
+#endif
 
    /* add user's headers */
    

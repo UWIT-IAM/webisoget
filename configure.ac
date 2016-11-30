@@ -71,14 +71,14 @@ AC_CHECK_LIB(curl,curl_easy_init,,
       [-lssl -lcrypto -lz])
 AC_CHECK_HEADER([curl/curl.h])
 
-# check for right version of curl
-AC_MSG_NOTICE([Checking libcurl version.])
-AC_LINK_IFELSE([
-  AC_LANG_SOURCE([[
-#include <curl/curl.h>
-int main(){ CURL *c; curl_easy_setopt(c, CURLOPT_RESOLVE, NULL);}
-]])]
-,[],[AC_MSG_ERROR(libcurl does not support CURLOPT_RESOLVE. (vers 7.30+))]) 
+## check for right version of curl
+#AC_MSG_NOTICE([Checking libcurl version.])
+#AC_LINK_IFELSE([
+#  AC_LANG_SOURCE([[
+##include <curl/curl.h>
+#int main(){ CURL *c; curl_easy_setopt(c, CURLOPT_RESOLVE, NULL);}
+#]])]
+#,[],[AC_MSG_ERROR(libcurl does not support CURLOPT_RESOLVE. (vers 7.30+))]) 
 
 
 
