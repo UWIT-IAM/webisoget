@@ -67,6 +67,11 @@ struct {
  {"postfile file      ", "file to post"},
  {"putfile file       ", "file to put"},
  {"quit               ", "exit"},
+#ifdef CURL_SSLVERSION_TLSv1_3
+ {"sslversion         ", "sslv2|sslv3|tlsv1|tlsv1.0|tlsv1.1|tlsv1.2|tlsv1.3"},
+#else
+ {"sslversion         ", "sslv2|sslv3|tlsv1|tlsv1.0|tlsv1.1|tlsv1.2"},
+#endif
  {"text               ", "enable display of page text"},
  {"timeout seconds    ", "set timeout in seconds (default=60)"},
  {"url url            ", "url to get"},
@@ -233,6 +238,19 @@ static int docmd(WebGet W, char *cmd, char *arg)
    } else if (!strcmp(cmd,"header")) {
       if (!arg) usage();
       add_header(W, arg);
+
+   } else if (!strcmp(cmd,"sslversion")) {
+      if (!arg) usage();
+      if (!strcmp(arg, "tlsv1")) W->sslversion = CURL_SSLVERSION_TLSv1;
+      else if (!strcmp(arg, "sslv2")) W->sslversion = CURL_SSLVERSION_SSLv2;
+      else if (!strcmp(arg, "sslv3")) W->sslversion = CURL_SSLVERSION_SSLv3;
+      else if (!strcmp(arg, "tlsv1.0")) W->sslversion = CURL_SSLVERSION_TLSv1_0;
+      else if (!strcmp(arg, "tlsv1.1")) W->sslversion = CURL_SSLVERSION_TLSv1_1;
+      else if (!strcmp(arg, "tlsv1.2")) W->sslversion = CURL_SSLVERSION_TLSv1_2;
+#ifdef CURL_SSLVERSION_TLSv1_3
+      else if (!strcmp(arg, "tlsv1.3")) { W->sslversion = CURL_SSLVERSION_TLSv1_3;
+#endif
+      else usage();
 
    } else if (!strcmp(cmd,"url")) {
       if (!arg) usage();

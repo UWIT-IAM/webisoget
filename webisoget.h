@@ -154,6 +154,8 @@ typedef struct WebGet__ {
   int num_user_headers;
   struct curl_slist *headers;
 
+  int sslversion;
+
 } WebGet_, *WebGet;
 
 

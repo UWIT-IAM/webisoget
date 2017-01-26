@@ -1451,9 +1451,7 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
    if (ckstr->base && *ckstr->base) curl_easy_setopt(W->curl, CURLOPT_COOKIE, ckstr->base);
    curl_easy_setopt(W->curl, CURLOPT_USERAGENT, W->user_agent);
    /* TEST */
-   // curl_easy_setopt(W->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_1);
-   // curl_easy_setopt(W->curl, CURLOPT_HTTP_VERSION, CURL_HTTP_VERSION_1_0);
-   curl_easy_setopt(W->curl, CURLOPT_SSLVERSION, CURL_SSLVERSION_DEFAULT);
+   int cr = curl_easy_setopt(W->curl, CURLOPT_SSLVERSION, W->sslversion);
 
    /* check for mapped host */
    HostMap M;
@@ -1665,6 +1663,7 @@ WebGet new_WebISOGet()
    W->maxhop = 20;
    W->maxxbuf = MAXXBUF;
    W->user_agent = USER_AGENT_WEBISOGET;
+   W->sslversion = CURL_SSLVERSION_DEFAULT;
    
    return (W);
 }
