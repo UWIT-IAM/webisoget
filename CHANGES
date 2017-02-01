@@ -1,3 +1,6 @@
+Vers 2.8.6 
+Fix test for CURLOPT_RESOLVE
+
 Vers 2.8.5 
 Add -sslversion option 
 

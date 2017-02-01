@@ -4,7 +4,7 @@
 #
 # Note the version number appears in doc/webisoget.html as well.
 #
-AC_INIT(WebISOGet, 2.8.5)
+AC_INIT(WebISOGet, 2.8.6)
 AM_INIT_AUTOMAKE
 AC_AIX
 
@@ -78,7 +78,7 @@ AC_LINK_IFELSE([
 #include <curl/curl.h>
 int main(){ CURL *c; curl_easy_setopt(c, CURLOPT_RESOLVE, NULL);}
 ]])]
-,[],[AC_MSG_NOTICE(libcurl does not support CURLOPT_RESOLVE (needs vers 7.30+) --  map command wll not work)]) 
+,[CPPFLAGS="$CPPFLAGS -DHAVE_CURLOPT_RESOLVE"],[AC_MSG_NOTICE(libcurl does not support CURLOPT_RESOLVE (needs vers 7.30+) --  map command wll not work)]) 
 
 
 

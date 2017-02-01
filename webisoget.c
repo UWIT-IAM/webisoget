@@ -216,7 +216,7 @@ static int docmd(WebGet W, char *cmd, char *arg)
       add_anchor(W, arg);
 
    } else if (!strcmp(cmd,"map")) {
-#ifdef CURLOPT_RESOLVE
+#ifdef HAVE_CURLOPT_RESOLVE
       if (!arg) usage();
       add_host_map(W, arg);
 #else

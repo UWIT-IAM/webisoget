@@ -240,7 +240,7 @@ char *get_dottedip(char *host) {
    return (NULL);
 }
 
-#ifdef CURLOPT_RESOLVE
+#ifdef HAVE_CURLOPT_RESOLVE
 void add_host_map(WebGet W, char *str)
 {
    HostMap m;
@@ -1455,7 +1455,7 @@ WebPage get_one_page(WebGet W, char *urlstr, Form form)
    /* TEST */
    int cr = curl_easy_setopt(W->curl, CURLOPT_SSLVERSION, W->sslversion);
 
-#ifdef CURLOPT_RESOLVE
+#ifdef HAVE_CURLOPT_RESOLVE
    /* check for mapped host */
    HostMap M;
    for (M=W->host_maps; M; M=M->next) {
