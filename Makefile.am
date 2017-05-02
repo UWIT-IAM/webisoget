@@ -11,3 +11,4 @@ EXTRA_DIST=COPYRIGHT README CHANGES doc/webisoget.man doc/webisoget.html webisog
 
 LDADD=-lwebisoget -lcurl -lssl -lcrypto -lz
 
+ACLOCAL_AMFLAGS=_i m4
