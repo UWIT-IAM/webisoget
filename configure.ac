@@ -15,12 +15,6 @@ AC_LANG(C)
 AC_PROG_CC
 
 AC_PROG_INSTALL
-AC_PATH_PROG(RM, rm, rm)
-AC_PATH_PROG(CP, cp, cp)
-AC_PATH_PROG(TAR, tar, tar)
-AC_PATH_PROG(GZIP, gzip, gzip)
-AC_PATH_PROG(MV, mv, mv)
-AC_PATH_PROG(CHMOD, chmod, chmod)
 
 # look for openssl install
 AC_ARG_WITH(ssl,
