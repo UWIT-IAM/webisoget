@@ -35,6 +35,11 @@
 #include "openssl/x509v3.h"
 #include "openssl/err.h"
 
+#if OPENSSL_VERSION_NUMBER<0x10100000L
+#define ASN1_STRING_get0_data ASN1_STRING_data
+#endif
+
+
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <fcntl.h>
@@ -191,7 +196,7 @@ static int sslverify_callback(int ok, X509_STORE_CTX *ctx)
       char *altn;
       GENERAL_NAME *ck = sk_GENERAL_NAME_value(altnams, i);
       if (ck->type != GEN_DNS) continue;
-      altn = (char *)ASN1_STRING_data(ck->d.ia5);
+      altn = (char *)ASN1_STRING_get0_data(ck->d.ia5);
       if (check_name(altn, static_peer_name)) break;
    }
    GENERAL_NAMES_free(altnams);
@@ -202,7 +207,7 @@ static int sslverify_callback(int ok, X509_STORE_CTX *ctx)
    }
 
    /* make up an error */
-   SSLerr(SSL_F_SSL_VERIFY_CERT_CHAIN, SSL_R_PEER_ERROR_CERTIFICATE);
+   SSLerr(SSL_F_SSL_VERIFY_CERT_CHAIN, SSL_R_CERTIFICATE_VERIFY_FAILED);
    return (0);
 }
 

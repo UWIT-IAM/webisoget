@@ -1,3 +1,6 @@
+Vers 2.8.7
+Fix for openssl 1.1
+
 Vers 2.8.6 
 Fix test for CURLOPT_RESOLVE
 
