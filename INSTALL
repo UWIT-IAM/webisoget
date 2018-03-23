@@ -1,8 +1,13 @@
 
-Install with:
+Extra packages required:
 
-# ./configure
-# make
+libtool, autoconf, automake, gcc, libcurl-devel, openssl-devel
+
+Install with:        
+
+$ bash ./boot
+$ ./configure
+$ make
 # make install
 
 Or with:
