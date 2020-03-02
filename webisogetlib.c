@@ -761,6 +761,7 @@ int load_known_form_from_file(WebGet W, char *file)
    buf = (char*) malloc(fl+1);
    
    while (fgets(buf, fl, f)>0) {
+      if (*buf=='#') continue;
       load_known_form(W, buf);
    }
    fclose(f);

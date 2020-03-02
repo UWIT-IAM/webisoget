@@ -4,7 +4,7 @@
 #
 # Note the version number appears in doc/webisoget.html as well.
 #
-AC_INIT(WebISOGet, 2.8.7)
+AC_INIT(WebISOGet, 2.8.8)
 AM_INIT_AUTOMAKE
 AC_AIX
 
