@@ -14,15 +14,20 @@ c programs.  Use webisoget.c as a guide to the API.
 Author:  Jim Fox, University of Washington, fox@washington.edu
 --------------------------------------------------------------
 
+Extra packages required:
+
+libtool, autoconf, automake, gcc, libcurl-devel, openssl-devel
+
 Install with:
 
-# ./configure
-# make
+$ bash ./boot
+$ ./configure
+$ make
 # make install
 
 To upgrade, best to clean first
-# make clean
-# make
+$ make clean
+$ make
 # make install
 
 
