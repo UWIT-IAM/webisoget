@@ -1,10 +1,10 @@
 # Configuration script for webisoget library and command-line tool
-# by fox, 2005-2016
+# by fox, 2005
 
 #
 # Note the version number appears in doc/webisoget.html as well.
 #
-AC_INIT(WebISOGet, 2.8.8)
+AC_INIT(WebISOGet, 2.9.0)
 AM_INIT_AUTOMAKE
 AC_AIX
 

@@ -1,3 +1,6 @@
+Vers 2.9.0
+Link the library directly.  Makes distribution easier.
+
 Vers 2.8.8
 Allow comments in form file:  1st char = '#'
 

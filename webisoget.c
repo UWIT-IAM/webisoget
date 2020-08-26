@@ -33,9 +33,9 @@ FILE *putfile = NULL;
 
 int interactive = 0;
 extern int delete_op;
-long lone = 1;
-long ltwo = 2;
-long lzero = 0;
+extern long lone;
+extern long ltwo;
+extern long lzero;
 
 static char *user_agent = USER_AGENT_GECKO;
 
