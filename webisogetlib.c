@@ -361,7 +361,7 @@ static time_t gmt2time(char *gmt)
   if (!s) return (0);
   
   memset(&t, 0, sizeof(t));
-  n = sscanf(s+1,"%d-%3s-%4d %2d:%2d:%2d",  
+  n = sscanf(s+1,"%d %3s %4d %2d:%2d:%2d",  
         &t.tm_mday, mtxt, &t.tm_year, 
         &t.tm_hour, &t.tm_min, &t.tm_sec); 
   if (n!=6) return (0);
